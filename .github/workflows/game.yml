@@ -25,8 +25,10 @@ jobs:
       - name: Extract issue content
         id: extract_issue
         run: |
-          ISSUE_BODY=$(jq -r .issue.body < $GITHUB_EVENT_PATH | tr -d '\r')
-          echo "ISSUE_BODY=$ISSUE_BODY" >> $GITHUB_ENV
+          ISSUE_BODY=$(jq -r .issue.body < $GITHUB_EVENT_PATH | sed 's/\r//g')
+          echo "ISSUE_BODY<<EOF" >> $GITHUB_ENV
+          echo "$ISSUE_BODY" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
 
 
       - name: Run game logic
@@ -39,3 +41,6 @@ jobs:
               -H "Content-Type: application/json" \
               -d "{\"body\": \"$COMMENT_BODY\"}" \
               "$GITHUB_API_URL/repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments"
+
+      - name: Debug issue body
+        run: echo "$ISSUE_BODY"
