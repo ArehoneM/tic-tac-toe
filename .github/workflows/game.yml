@@ -24,7 +24,10 @@ jobs:
 
       - name: Extract issue content
         id: extract_issue
-        run: echo "ISSUE_BODY=$(jq -r .issue.body < $GITHUB_EVENT_PATH)" >> $GITHUB_ENV
+        run: |
+          ISSUE_BODY=$(jq -r .issue.body < $GITHUB_EVENT_PATH | tr -d '\r')
+          echo "ISSUE_BODY=$ISSUE_BODY" >> $GITHUB_ENV
+
 
       - name: Run game logic
         run: python tic_tac_toe.py "$ISSUE_BODY"
