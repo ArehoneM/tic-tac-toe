@@ -1,0 +1,38 @@
+name: Tic-Tac-Toe Game
+
+on:
+  issues:
+    types: [opened, edited]
+
+jobs:
+  play_game:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.x
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq
+
+      - name: Extract issue content
+        id: extract_issue
+        run: echo "ISSUE_BODY=$(jq -r .issue.body < $GITHUB_EVENT_PATH)" >> $GITHUB_ENV
+
+      - name: Run game logic
+        run: python tic_tac_toe.py "$ISSUE_BODY"
+
+      - name: Post updated board
+        run: |
+          COMMENT_BODY="**Updated Board:**\n\`\`\`\n$(python format_board.py)\n\`\`\`"
+          curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Content-Type: application/json" \
+              -d "{\"body\": \"$COMMENT_BODY\"}" \
+              "$GITHUB_API_URL/repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments"
